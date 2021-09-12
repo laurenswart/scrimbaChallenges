@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+	:root {
+		--main-dark-blue:#2A4072;
+		--main-pink:#E63F75cc;
+		--main-turquoise:#19CCC3;
+		--main-royal-blue:#385CDF;
+	}
+	
+	* {
+		box-sizing:border-box;
+		font-family:arial;
+	}
+	
+	.digit{
+		color:white;
+		background-color:#111111;
+		padding:20px;;
+	}
+	
+	html, body {
+		margin:0;
+	    height: 100vh;
+	  
+	}
+	
+	#container{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		padding:20px;
+		background-image:url("assets/pomodore.jpg");
+	}
+	
+	#pinkBox{
+		height: 100%;
+		min-height:300px;
+		display:flex;
+		min-width:450px;
+		flex-direction:column;
+		justify-content:center;
+		font-size:40px;
+		background-color:var(--main-pink);
+		border-radius:30px;
+		text-align:center;
+	}
+	
+	#pinkBox *{
+		border-radius:5px;
+		font-weight:bold;
+	}
+	
+	#clock span{
+		display:inline-block;
+	}
+	
+	button{
+		background-color:#f1f1f1;
+		border:none;
+		padding:10px 20px;
+		color:var(--main-dark-blue);
+	}
+	
+	button:hover{
+		background-color:var(--main-royal-blue);
+		color:white;
+	}
+	
+	#progressBorder{
+		visibility:hidden;
+		background-color:transparent;
+		border:1px solid #f1f1f1;;
+		margin: 10px;
+		padding:0;
+		text-align:left;
+	}
+	#progressBorder > div{
+		background-color:var(--main-royal-blue);
+		height:10px;
+	}
+</style>
+</head>
+<body>
+	<div id="container">
+		<div id="pinkBox">
+			<div id="progressBorder"><div></div></div>
+			<div id="clock">
+				<span id="minD1" class="digit">0</span>
+				<span id="minD2" class="digit">0</span>
+				<span>:</span>
+				<span id="secD1" class="digit">0</span>
+				<span id="secD2" class="digit">0</span>
+			</div>
+			<div>
+				<button meta-minutes="25">Work!</button>
+				<button meta-minutes="0.1">Short break</button>
+				<button meta-minutes="15">Long break</button>
+			</div>
+		
+		</div>
+	</div>
+
+	<script>
+	//Variables
+	let secondsRemaining = null; 												//in seconds
+	let interval = null;														//ID to clear interval
+	let progressBorder = document.querySelector('#progressBorder');
+	let progress = document.querySelector('#progressBorder > div');
+	let progressIncrement = 0;
+	let minD2 = document.querySelector('#minD2');
+	let minD1 = document.querySelector('#minD1');
+	let secD2 = document.querySelector('#secD2');
+	let secD1 = document.querySelector('#secD1');
+	var sound = new Audio('assets/pomodore-alarm.wav');
+	
+	//EventListeners for buttons
+	document.querySelectorAll('button').forEach( btn => btn.addEventListener('click', changeClock));
+
+	/**
+	 * Called on button click
+	 * Clears previous interval and sets new clock
+	 */
+	function changeClock(){
+		let minutes = this.getAttribute('meta-minutes');
+		if (interval!=null) {
+			clearInterval(interval);
+			interval = null;
+		}
+		secondsRemaining = minutes*60;
+		updateClock();
+		
+	};
+
+	/**
+	 * Called every second once a button has been pressed
+	 * Updates clock and display and progress bar
+	 */
+	function updateClock(){
+		//launch an interval if not already set
+		if (interval==null) {
+			interval = setInterval(updateClock, 1000);
+			sound.pause()
+			progressIncrement = progressBorder.offsetWidth/secondsRemaining;		//increment qty at each second for progress bar
+			progressBorder.style.visibility = 'visible';
+			progress.style.width = '0px';
+			document.querySelectorAll('.digit').forEach(digit => digit.style.backgroundColor = '#111111');
+			
+		} else {
+			//update border
+			progress.style.width = parseFloat(progress.style.width.split('px')[0])+progressIncrement+'px';;
+		}
+		
+		//base case: timer ends
+		if (secondsRemaining == 0 ) endClock();
+		
+		//display time on screen
+		let minutes = Math.floor(secondsRemaining / 60);
+		let seconds = secondsRemaining - minutes * 60;
+		minD2.innerHTML = minutes % 10;
+		minD1.innerHTML = (minutes - minD2.innerHTML)/10;
+		secD2.innerHTML = seconds % 10;
+		secD1.innerHTML = (seconds - secD2.innerHTML)/10 
+
+		//update time -1 second
+		secondsRemaining -= 1;
+	}
+	
+	function endClock(){
+		//progressBorder.style.visibility = 'hidden';
+		document.querySelectorAll('.digit').forEach(digit => digit.style.backgroundColor = 'var(--main-turquoise)');
+		//makeSound
+		sound.currentTime = 0;
+        sound.play();
+		setTimeout(function(){sound.pause()},3000);
+		//stopInterval
+		clearInterval(interval);
+	}
+	</script>
+</body>
+</html>
